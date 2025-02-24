@@ -19,13 +19,13 @@ game_region = (570,25,1345,775)
 def findMobStartFight():
   global current_step, mob_found, fight_started, random_sleep, error_counter
 
-  mouse_click_offset = 25
+  mouse_click_offset = 20
 
   if not mob_found:
     for image_path in gob_images:
       try:
         #print(f"DBG: Trying to find mob with path: {image_path}")
-        mob_pos = pg.locateOnScreen(image_path, region=game_region, confidence=0.6, grayscale = True)
+        mob_pos = pg.locateOnScreen(image_path, confidence=0.6, grayscale = True)
         print(f"DBG: Mob found at ({mob_pos[0]},{mob_pos[1]})")
         pg.moveTo(mob_pos[0] + mouse_click_offset , mob_pos[1] + mouse_click_offset)
         pg.leftClick()
@@ -48,7 +48,7 @@ def findMobStartFight():
       time.sleep(random_sleep)
       pg.leftClick()
 
-      time.sleep(5) #Running time for char
+      time.sleep(7) #Running time for char
 
       keyboard.press_and_release("r") #Rdy up/start fight
 
@@ -117,7 +117,7 @@ def fight_over_reset():
 
   print("DBG: found lvl up window, pressing enter...")
   keyboard.press_and_release("enter")
-  time.sleep(0.1)
+  time.sleep(0.5)
   keyboard.press_and_release('esc')
 
   current_step = 0 #check hp again
@@ -130,10 +130,12 @@ def fight_over_reset():
 def recover_hp():
   global current_step
   if pg.pixelMatchesColor(1303,825, (255,255,148)): # HP is low (checking yellow ish area of heart)
-    pg.moveTo(663,823) # moves moouse to sit position
+    #pg.moveTo(663,823) # moves moouse to sit position
+    pg.moveTo(672,822) # moves moouse to sit position (laptop)
     time.sleep(random_sleep)
     pg.leftClick()
-  while pg.pixelMatchesColor(1303,825, (255,255,148)):
+  #while pg.pixelMatchesColor(1303,825, (255,255,148)):
+  while not pg.pixelMatchesColor(1305,819, (228,77,77)): #checking while not red color has reach this threshold yet
     time.sleep(0.5)
   print("DBG: HP OKAY, current step --> 1 (checking for mobs)")
   current_step = 1
@@ -163,16 +165,25 @@ def change_zone():
   except:
     print("DBG: Don't recoginze top right zone")
 
-
+def check_esc_window():
+  #print("DBG: running esc window function")
+  try:
+      pg.locateOnScreen(r"images\esc_menu.png", grayscale=True, confidence=0.8)
+      print("DBG: esc window found... pressing ESC to remove")
+      keyboard.press_and_release("esc")
+  except:
+    print("DBG: No esc window found...")
+  
 
 while keyboard.is_pressed('q') == False:
   if current_step == 0:
     recover_hp()
 
   if current_step == 1:
-    if error_counter >= 200:
+    if error_counter >= 125:
       change_zone()
     else:
+      check_esc_window()
       findMobStartFight()
 
   if current_step == 3:
