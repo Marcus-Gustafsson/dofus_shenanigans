@@ -25,7 +25,7 @@ def findMobStartFight():
     for image_path in gob_images:
       try:
         #print(f"DBG: Trying to find mob with path: {image_path}")
-        mob_pos = pg.locateOnScreen(image_path, confidence=0.6, grayscale = True)
+        mob_pos = pg.locateOnScreen(image_path, confidence=0.55, grayscale = True)
         print(f"DBG: Mob found at ({mob_pos[0]},{mob_pos[1]})")
         pg.moveTo(mob_pos[0] + mouse_click_offset , mob_pos[1] + mouse_click_offset)
         pg.leftClick()
@@ -180,7 +180,7 @@ while keyboard.is_pressed('q') == False:
     recover_hp()
 
   if current_step == 1:
-    if error_counter >= 125:
+    if error_counter >= 100:
       change_zone()
     else:
       check_esc_window()
@@ -190,4 +190,5 @@ while keyboard.is_pressed('q') == False:
     fight_sequence()
 
   if current_step == 4:
+    check_esc_window()
     fight_over_reset()
