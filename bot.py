@@ -12,28 +12,32 @@ mob_found = False
 fight_started = False
 round_counter = 0
 random_sleep = random.uniform(0.5 , 1)
+error_counter = 0
 
 game_region = (570,25,1345,775)
 
 def findMobStartFight():
-  global current_step, mob_found, fight_started, random_sleep
+  global current_step, mob_found, fight_started, random_sleep, error_counter
 
   mouse_click_offset = 25
 
   if not mob_found:
     for image_path in gob_images:
       try:
-        print(f"DBG: Trying to find mob with path: {image_path}")
-        mob_pos = pg.locateOnScreen(image_path, region=game_region, confidence=0.6)
+        #print(f"DBG: Trying to find mob with path: {image_path}")
+        mob_pos = pg.locateOnScreen(image_path, region=game_region, confidence=0.6, grayscale = True)
         print(f"DBG: Mob found at ({mob_pos[0]},{mob_pos[1]})")
         pg.moveTo(mob_pos[0] + mouse_click_offset , mob_pos[1] + mouse_click_offset)
         pg.leftClick()
         time.sleep(random_sleep)
         mob_found = True
-        print(f"DBG: mob found before breaking = {mob_found}")
+        error_counter = 0
+        #print(f"DBG: mob found before breaking = {mob_found}")
         break
         
       except:
+        error_counter += 1
+        print(f"DBG: incrementing error counter = {error_counter}")
         print(f"DBG: Error with finding mob...")
   
   if mob_found:
@@ -81,7 +85,20 @@ def fight_sequence():
         pg.rightClick()
         keyboard.press_and_release("r")
         round_counter += 1
+
+      elif pg.pixelMatchesColor(1625, 931, (176,42,42)) and round_counter < 2: #CF for EQ, cast again
+        print("DBG: casting EQ again after CF")
+        pg.moveTo(1636,930) # EQ button (x,y) cords
+        pg.rightClick()
+        time.sleep(random_sleep)
+        
       
+      elif pg.pixelMatchesColor(1686 , 932, (255,255,255)) and round_counter < 2: #CF sylvan, cast again
+        print("DBG: casting sylvan again after CF")
+        pg.moveTo(1688 , 930) # Sylvan Button
+        time.sleep(random_sleep)
+        pg.rightClick()
+
       elif round_counter >= 5:
         round_counter = 0
       
@@ -97,6 +114,10 @@ def fight_over_reset():
 
   global current_step, mob_found, fight_started, round_counter
 
+
+  print("DBG: found lvl up window, pressing enter...")
+  keyboard.press_and_release("enter")
+  time.sleep(0.1)
   keyboard.press_and_release('esc')
 
   current_step = 0 #check hp again
@@ -108,23 +129,54 @@ def fight_over_reset():
 
 def recover_hp():
   global current_step
-  if pg.pixelMatchesColor(1303,820, (255,255,148)): # HP is low (checking yellow ish area of heart)
+  if pg.pixelMatchesColor(1303,825, (255,255,148)): # HP is low (checking yellow ish area of heart)
     pg.moveTo(663,823) # moves moouse to sit position
     time.sleep(random_sleep)
     pg.leftClick()
-  while pg.pixelMatchesColor(1303,820, (255,255,148)):
+  while pg.pixelMatchesColor(1303,825, (255,255,148)):
     time.sleep(0.5)
   print("DBG: HP OKAY, current step --> 1 (checking for mobs)")
   current_step = 1
+
+
+def change_zone():
+  global error_counter
+
+  try:
+    pg.locateOnScreen(r"images\top_left_zone.png", grayscale= True, confidence=0.55)
+    pg.moveTo(1870,391)
+    pg.leftClick()
+    print("DBG: Chaining zone from top left zone to top right")
+    time.sleep(5) # Time for character to move
+    error_counter = 0 # Resetting error counter
+    return
+  except:
+    print("DBG: Don't recoginze top left zone")
+  try:
+    pg.locateOnScreen(r"images\top_right_zone.png", grayscale= True, confidence=0.55)
+    pg.moveTo(618,394)
+    pg.leftClick()
+    print("DBG: Chaining zone to top left zone from top right")
+    time.sleep(5) # Time for character to move
+    error_counter = 0 # Resetting error counter
+    return
+  except:
+    print("DBG: Don't recoginze top right zone")
 
 
 
 while keyboard.is_pressed('q') == False:
   if current_step == 0:
     recover_hp()
+
   if current_step == 1:
-    findMobStartFight()
+    if error_counter >= 200:
+      change_zone()
+    else:
+      findMobStartFight()
+
   if current_step == 3:
     fight_sequence()
+
   if current_step == 4:
     fight_over_reset()
