@@ -48,11 +48,20 @@ def findMobStartFight():
       time.sleep(random_sleep)
       pg.leftClick()
 
-      time.sleep(7) #Running time for char
-
+      #time.sleep(7) #Running time for char
+      while not fight_started and error_counter <= 50:
+        time.sleep(0.1)
+        try:
+          attack_pop_up = pg.locateOnScreen(r"images\rdy_button.png",region=game_region, confidence=0.7)
+          fight_started = True
+          error_counter = 0
+        except:
+          error_counter += 1
+          print(f"DBG: incrementing error counter = {error_counter}")
+          print("DBG: fight started but cannot find Ready bbutton")
       keyboard.press_and_release("r") #Rdy up/start fight
 
-      fight_started = True
+      #fight_started = True
       print(f"DBG: current_step before setting to 3 --> {current_step}")
       current_step = 3
 
@@ -114,7 +123,7 @@ def fight_over_reset():
 
   global current_step, mob_found, fight_started, round_counter
 
-
+  time.sleep(1)
   print("DBG: found lvl up window, pressing enter...")
   keyboard.press_and_release("enter")
   time.sleep(0.5)
@@ -146,9 +155,9 @@ def change_zone():
 
   try:
     pg.locateOnScreen(r"images\top_left_zone.png", grayscale= True, confidence=0.55)
-    pg.moveTo(1870,391)
+    pg.moveTo(1293,784)
     pg.leftClick()
-    print("DBG: Chaining zone from top left zone to top right")
+    print("DBG: Top left zone -> Bottom left Zone")
     time.sleep(5) # Time for character to move
     error_counter = 0 # Resetting error counter
     return
@@ -158,12 +167,34 @@ def change_zone():
     pg.locateOnScreen(r"images\top_right_zone.png", grayscale= True, confidence=0.55)
     pg.moveTo(618,394)
     pg.leftClick()
-    print("DBG: Chaining zone to top left zone from top right")
+    print("DBG: Top right zone -> Top Left Zone")
     time.sleep(5) # Time for character to move
     error_counter = 0 # Resetting error counter
     return
   except:
     print("DBG: Don't recoginze top right zone")
+
+  try:
+    pg.locateOnScreen(r"images\bottom_left_zone.png", grayscale= True, confidence=0.55)
+    pg.moveTo(1869,392)
+    pg.leftClick()
+    print("DBG: Bottom Left Zone -> Bottom Right Zone")
+    time.sleep(5) # Time for character to move
+    error_counter = 0 # Resetting error counter
+    return
+  except:
+    print("DBG: Don't recoginze Bottom Left zone")
+
+  try:
+    pg.locateOnScreen(r"images\bottom_right_zone.png", grayscale= True, confidence=0.55)
+    pg.moveTo(1293,48)
+    pg.leftClick()
+    print("DBG: Bottom Right Zone -> Top Right Zone")
+    time.sleep(5) # Time for character to move
+    error_counter = 0 # Resetting error counter
+    return
+  except:
+    print("DBG: Don't recoginze Bottom Right zone")
 
 def check_esc_window():
   #print("DBG: running esc window function")
@@ -180,7 +211,7 @@ while keyboard.is_pressed('q') == False:
     recover_hp()
 
   if current_step == 1:
-    if error_counter >= 100:
+    if error_counter >= 50:
       change_zone()
     else:
       check_esc_window()
