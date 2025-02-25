@@ -25,7 +25,7 @@ def findMobStartFight():
     for image_path in gob_images:
       try:
         #print(f"DBG: Trying to find mob with path: {image_path}")
-        mob_pos = pg.locateOnScreen(image_path, confidence=0.55, grayscale = True)
+        mob_pos = pg.locateOnScreen(image_path, confidence=0.5, grayscale = True)
         print(f"DBG: Mob found at ({mob_pos[0]},{mob_pos[1]})")
         pg.moveTo(mob_pos[0] + mouse_click_offset , mob_pos[1] + mouse_click_offset)
         pg.leftClick()
@@ -123,10 +123,10 @@ def fight_over_reset():
 
   global current_step, mob_found, fight_started, round_counter
 
-  time.sleep(1)
+  time.sleep(2)
   print("DBG: found lvl up window, pressing enter...")
   keyboard.press_and_release("enter")
-  time.sleep(0.5)
+  time.sleep(1)
   keyboard.press_and_release('esc')
 
   current_step = 0 #check hp again
@@ -211,7 +211,7 @@ while keyboard.is_pressed('q') == False:
     recover_hp()
 
   if current_step == 1:
-    if error_counter >= 50:
+    if error_counter >= 35:
       change_zone()
     else:
       check_esc_window()
