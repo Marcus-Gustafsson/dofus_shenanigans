@@ -133,6 +133,7 @@ def fight_over_reset():
   mob_found = False
   fight_started = False
   round_counter = 0
+  print(f"DBG: resetting, current_step = {current_step}")
 
 
 
