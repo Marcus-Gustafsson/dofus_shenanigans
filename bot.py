@@ -35,8 +35,8 @@ def findMobStartFight():
   if not mob_found:
     for image_path in pig_images:
       try:
-        #print(f"DBG: Trying to find mob with path: {image_path}")
-        mob_pos = pg.locateOnScreen(image_path, confidence=0.55, grayscale = True)
+        print(f"DBG: Current zone = {current_zone}")
+        mob_pos = pg.locateOnScreen(image_path, confidence=0.58, region=game_region, grayscale = True)
         print(f"DBG: Mob found at ({mob_pos[0]},{mob_pos[1]})")
         pg.moveTo(mob_pos[0] + mouse_click_offset , mob_pos[1] + mouse_click_offset)
         pg.leftClick()
@@ -70,21 +70,52 @@ def findMobStartFight():
           error_counter += 1
           print(f"DBG: incrementing error counter = {error_counter}")
           print("DBG: fight started but cannot find Ready bbutton")
-      if current_zone == "down_top" and not pg.pixelMatchesColor(1838, 984, (255,0,0)):
-        pg.moveTo(1677, 544) # starting on the bottom
-        time.sleep(0.5)
-        pg.leftClick()
-        starting_top = False
-      else:
-        pg.moveTo(1630, 368) # starting on top
-        time.sleep(0.5)
-        pg.leftClick()
-        starting_top = True
 
-      if current_zone == "up_from_bottom":
-        pg.moveTo(1678, 444)
+      if current_zone == "down_top" and pg.pixelMatchesColor(1852, 320, (255,0,0)):
+        print("Should only happen in down_top zone and starting top")
+        starting_top = True
+        pg.moveTo(1852, 320) # Move out of position to unblock view
         time.sleep(0.5)
         pg.leftClick()
+        time.sleep(0.5)
+        pg.moveTo(1628, 370) # Move into postion
+        time.sleep(0.5)
+        pg.leftClick()
+      elif current_zone == "down_top":
+        print("Down top zone and starting bottom")
+        starting_top = False
+        pg.moveTo(1773, 648) # Move out of position
+        time.sleep(0.5)
+        pg.leftClick()
+        time.sleep(0.5)
+        pg.moveTo(1676, 540) # starting on bottom
+        time.sleep(0.5)
+        pg.leftClick()
+
+      if current_zone == "up_from_bottom" and pg.pixelMatchesColor(1897, 491, (255,0,0)):
+        print("DBG: starting top on zone 'up_from_btoom'")
+        starting_top = True
+        pg.moveTo(1802 , 391) # Upper square first before moving into position
+        time.sleep(0.5)
+        pg.leftClick()
+        pg.leftClick()
+        time.sleep(0.5)
+        pg.moveTo(1678, 444) # Correct starting position
+        time.sleep(0.5)
+        pg.leftClick()
+      elif current_zone == "up_from_bottom":
+        print("DBG: starting down on zone 'up_from_btoom'")
+        starting_top = False
+        pg.moveTo(1244 , 525) # Upper square first before moving into position
+        time.sleep(0.5)
+        pg.leftClick()
+        pg.leftClick()
+        time.sleep(0.5)
+        pg.moveTo(1340, 467) # Correct starting position
+        time.sleep(0.5)
+        pg.leftClick()
+        pg.leftClick()
+
       keyboard.press_and_release("r") #Rdy up/start fight
 
       #fight_started = True
@@ -98,50 +129,64 @@ def findMobStartFight():
 
 def fight_sequence():
 
-  global round_counter, current_step, random_sleep, current_zone, first_round
-  #print("DBG: Fighting Sequence....")
+  global round_counter, current_step, random_sleep, current_zone, first_round, starting_top
+  print("DBG: Fighting Sequence...")
   time.sleep(random_sleep)
 
-  if pg.pixelMatchesColor(1838, 984, (190,185,152)) and not pg.pixelMatchesColor(1745, 700, (255,117,30)): # Indicates that fight has ended by checking bottom right slot of inv and not seeing "Tactical mode" (start of fight)      
+  if (pg.pixelMatchesColor(1838, 984, (190,185,152)) and not pg.pixelMatchesColor(1745, 700, (255,117,30))) or pg.pixelMatchesColor(1726, 653, (230,87,0)): # Indicates that fight has ended by checking bottom right slot of inv and not seeing "Tactical mode" (start of fight) or lvl up window appeard.
+      print("DBG: resetting after fight")
       current_step = 4 # Sets to reset fight step
+      time.sleep(1)
       return
 
 
   if pg.pixelMatchesColor(1363,848, (255,102,0)): # Player turn started
       if first_round and current_zone == "down_top":
-        if not starting_top:
-          print("DBG: down_top zone and moving into position before EQ/SYLV, starting bottom")
-          pg.moveTo(1628, 464)
+
+        if starting_top:
+          print("DBG: starting top, moving before EQ/SYLV (zone= down_top)")
+          pg.moveTo(1580, 440) # move into positon before EQ/SYLV
           time.sleep(0.5)
           pg.leftClick()
         else:
-          print("DBG: starting top, moving before EQ/SYLV (zone= down_top)")
-          pg.moveTo(1580, 445)
+          print("DBG: starting bottom, moving before EQ/SYLV (zone= down_top)")
+          pg.moveTo(1530, 470)
           time.sleep(0.5)
           pg.leftClick()
         first_round = False
-      elif first_round and current_zone == "up_from_bottom":
-        print("DBG: up_from_bottom zone and moving into position before EQ/SYLV")
-        pg.moveTo(1536, 370)
-        time.sleep(0.5)
-        pg.leftClick()
+
+      if first_round and current_zone == "up_from_bottom":
+
+        if starting_top:
+          print("DBG: up_from_bottom zone and moving into position before EQ/SYLV (STARTING TOP)")
+          pg.moveTo(1536, 370)
+          time.sleep(0.5)
+          pg.leftClick()
+        else:
+          print("DBG: up_from_bottom zone and moving into position before EQ/SYLV (STARTING BOTTOM)")
+          pg.moveTo(1486, 391)
+          time.sleep(0.5)
+          pg.leftClick()
         first_round = False
+
       print("DBG: Player turn started, orange tick in clock...")
       print(f"DBG: round counter =  {round_counter}")
       print(f"current_zone = {current_zone}")
-      time.sleep(0.5)
+      time.sleep(1)
       try:
         if round_counter == 0:
           pg.moveTo(1636,930) # EQ button (x,y) cords
           pg.rightClick()
           time.sleep(random_sleep)
-          pg.moveTo(1688 , 930) # Sylvan Button
-          time.sleep(random_sleep)
-          pg.rightClick()
+          if not pg.pixelMatchesColor(1625, 931, (176,42,42)): #CF on EQ cast, dont cast sylvan
+            pg.moveTo(1688 , 930) # Sylvan Button
+            time.sleep(random_sleep)
+            pg.rightClick()
+
           keyboard.press_and_release("r")
           round_counter += 1
 
-        elif pg.pixelMatchesColor(1625, 931, (176,42,42)) and round_counter < 2: #CF for EQ, cast again
+        elif pg.pixelMatchesColor(1625, 931, (176,42,42)) and round_counter < 2: #CF for EQ --> EQ available, cast again
           print("DBG: casting EQ again after CF")
           pg.moveTo(1636,930) # EQ button (x,y) cords
           pg.rightClick()
@@ -186,7 +231,7 @@ def fight_over_reset():
 
 def recover_hp():
   global current_step
-  if not pg.pixelMatchesColor(1305,825, (228,77,77)): # Checking if color is red or yeollw (low hp)
+  if pg.pixelMatchesColor(1305,808, (255,255,102)): # Checking if color is red or yeollw (low hp)
     #pg.moveTo(663,823) # moves moouse to sit position
     print("DBG: trying to sit")
     pg.moveTo(672,822) # moves moouse to sit position (laptop)
@@ -194,7 +239,7 @@ def recover_hp():
     pg.leftClick()
   #while pg.pixelMatchesColor(1303,825, (255,255,148)):
 
-  while pg.pixelMatchesColor(1303,815, (255,255,148)): #sitting untill this part is no longer yellow-ish (hp is filled)
+  while pg.pixelMatchesColor(1305,808, (255,255,102)): #sitting untill this part is no longer yellow-ish (hp is filled)
     print("DBG: hp not yet ok...")
     time.sleep(0.5)
   print("DBG: HP OKAY, current step --> 1 (checking for mobs)")
@@ -259,11 +304,6 @@ def change_zone_piglet():
     pg.leftClick()
     print("DBG: Top zone -> down from top Zone")
     time.sleep(5) # Time for character to move
-    try:
-      pg.locateOnScreen(r"images\down_from_top_piglet_zone.png", grayscale= True, confidence=0.55)
-      current_zone = "down_top"
-    except:
-      print(f"DBG: didn't move zone.. current_zone = {current_zone}")
     error_counter = 0 # Resetting error counter
     return
   except:
@@ -272,22 +312,12 @@ def change_zone_piglet():
     pg.locateOnScreen(r"images\down_from_top_piglet_zone.png", grayscale= True, confidence=0.55)
     if moving_down:
       pg.moveTo(1822,760) #move down
-      try:
-        pg.locateOnScreen(r"images\up_from_bottom_piglet_zone.png", grayscale= True, confidence=0.55)
-        current_zone = "up_from_bottom"
-      except:
-        print(f"DBG: didn't move zone.. current_zone = {current_zone}")
+      print("DBG: Down from top -> up from bottom")
     else:
       pg.moveTo(1677, 48) #move up
-      try:
-        pg.locateOnScreen(r"images\top_piglet_zone.png", grayscale= True, confidence=0.55)
-        current_zone = "top_zone"
-      except:
-        print(f"DBG: didn't move zone.. current_zone = {current_zone}")
+      print("DBG: Down from top -> top")
     pg.leftClick()
-    print("DBG: Down from top -> up from bottom")
     time.sleep(5) # Time for character to move
-    current_zone = "up_from_bottom"
     error_counter = 0 # Resetting error counter
     return
   except:
@@ -297,20 +327,11 @@ def change_zone_piglet():
     pg.locateOnScreen(r"images\up_from_bottom_piglet_zone.png", grayscale= True, confidence=0.55)
     if moving_down:
       pg.moveTo(1581,784) #moving down
-      try:
-        pg.locateOnScreen(r"images\bottom_piglet_zone.png", grayscale= True, confidence=0.55)
-        current_zone = "bottom"
-      except:
-        print(f"DBG: didn't move zone.. current_zone = {current_zone}")
+      print("DBG: up_from_bottom -> bottom zone")
     else:
       pg.moveTo(1822,73) #moving up
-      try:
-        pg.locateOnScreen(r"images\down_from_top_piglet_zone.png", grayscale= True, confidence=0.55)
-        current_zone = "down_top"
-      except:
-        print(f"DBG: didn't move zone.. current_zone = {current_zone}")
+      print("DBG: up_from_bottom -> tdown_from_top")
     pg.leftClick()
-    print("DBG: up_from_bottom -> bottom zone")
     time.sleep(5) # Time for character to move
     error_counter = 0 # Resetting error counter
 
@@ -325,15 +346,44 @@ def change_zone_piglet():
     print("DBG: Bottom Zone -> up from bottom Zone")
     time.sleep(5) # Time for character to move
     error_counter = 0 # Resetting error counter
-    try:
-      pg.locateOnScreen(r"images\up_from_bottom_piglet_zone.png", grayscale= True, confidence=0.55)
-      current_zone = "up_from_bottom"
-    except:
-      print(f"DBG: didn't move zone.. current_zone = {current_zone}")
-    moving_down = False
     return
   except:
     print("DBG: Don't recoginze Bottom zone")
+
+def check_current_zone():
+  global current_zone, moving_down
+
+  while True:
+
+    try:
+        pg.locateOnScreen(r"images\top_piglet_zone.png", grayscale= True, confidence=0.55)
+        current_zone = "top_zone"
+        moving_down = True
+        return
+    except:
+      print(f"DBG: didn't move to top zone.. current_zone = {current_zone}")
+
+    try:
+      pg.locateOnScreen(r"images\down_from_top_piglet_zone.png", grayscale= True, confidence=0.55)
+      current_zone = "down_top"
+      return
+    except:
+      print(f"DBG: didn't move down_top zone.. current_zone = {current_zone}")
+      
+    try:
+      pg.locateOnScreen(r"images\up_from_bottom_piglet_zone.png", grayscale= True, confidence=0.55)
+      current_zone = "up_from_bottom"
+      return
+    except Exception as error:
+      print(f"{error}")
+
+      try:
+        pg.locateOnScreen(r"images\bottom_piglet_zone.png", grayscale= True, confidence=0.55)
+        current_zone = "bottom"
+        moving_down = False
+        return
+      except:
+        print(f"DBG: didn't move to bottom zone.. current_zone = {current_zone}")
   
 
 def check_esc_window():
@@ -350,13 +400,12 @@ while keyboard.is_pressed('q') == False:
   if current_step == 0:
     recover_hp()
     if current_zone == None:
-      #change_zone_piglet()
-      pass
+      check_current_zone()
 
   if current_step == 1:
     if error_counter >= 35:
-      #change_zone_piglet()
-      findMobStartFight()
+      change_zone_piglet()
+      check_current_zone()
     else:
       check_esc_window()
       findMobStartFight()
