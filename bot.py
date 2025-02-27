@@ -11,7 +11,8 @@ pig_images = [r"images\piglet_facing_left_down.png",
               r"images\piglet_facing_left_up.png", 
               r"images\piglet_facing_right_down_v2.png", 
               r"images\piglet_facing_right_down.png",
-              r"images\piglet_facing_up_right.png"
+              r"images\piglet_facing_up_right.png",
+              r"images\piglet_facing_up_left.png"
               ]
 # Step 1 -> Find mob and start fight, Step 2 -> Change map and repeat Step 1, Step 3 -> Fighting, Step 4 -> End Fight Screen -> Repeat from Step 1
 current_step = 0 #start to check hp
@@ -36,7 +37,7 @@ def findMobStartFight():
     for image_path in pig_images:
       try:
         print(f"DBG: Current zone = {current_zone}")
-        mob_pos = pg.locateOnScreen(image_path, confidence=0.58, region=game_region, grayscale = True)
+        mob_pos = pg.locateOnScreen(image_path, confidence=0.60, region=game_region, grayscale = True)
         print(f"DBG: Mob found at ({mob_pos[0]},{mob_pos[1]})")
         pg.moveTo(mob_pos[0] + mouse_click_offset , mob_pos[1] + mouse_click_offset)
         pg.leftClick()
@@ -68,8 +69,14 @@ def findMobStartFight():
           error_counter = 0
         except:
           error_counter += 1
-          print(f"DBG: incrementing error counter = {error_counter}")
-          print("DBG: fight started but cannot find Ready bbutton")
+          print(f"DBG: Fight yet not started, error = {error_counter}")
+          #print("DBG: fight started but cannot find Ready bbutton")¨
+      
+      if error_counter >= 50 and not fight_started:
+        print("DBG: returning to finding mob due to fight not started")
+        current_step = 1
+        fight_started = False
+        return
 
       if current_zone == "down_top" and pg.pixelMatchesColor(1852, 320, (255,0,0)):
         print("Should only happen in down_top zone and starting top")
@@ -178,7 +185,10 @@ def fight_sequence():
           pg.moveTo(1636,930) # EQ button (x,y) cords
           pg.rightClick()
           time.sleep(random_sleep)
-          if not pg.pixelMatchesColor(1625, 931, (176,42,42)): #CF on EQ cast, dont cast sylvan
+          pg.moveTo(1586,932) # Poisoned Wind button (x,y) cords
+          pg.rightClick()
+          time.sleep(random_sleep)
+          if pg.pixelMatchesColor(1643, 933, (88,21,21)) and pg.pixelMatchesColor(1595, 928, (53,50, 36)): # EQ and Wind cast OK!, cast sylvan!
             pg.moveTo(1688 , 930) # Sylvan Button
             time.sleep(random_sleep)
             pg.rightClick()
@@ -189,6 +199,12 @@ def fight_sequence():
         elif pg.pixelMatchesColor(1625, 931, (176,42,42)) and round_counter < 2: #CF for EQ --> EQ available, cast again
           print("DBG: casting EQ again after CF")
           pg.moveTo(1636,930) # EQ button (x,y) cords
+          pg.rightClick()
+          time.sleep(random_sleep)
+
+        elif pg.pixelMatchesColor(1583, 933, (106,101,73)) and round_counter < 2: #CF for WIND --> WIND available, cast again
+          print("DBG: casting EQ again after CF")
+          pg.moveTo(1586,932) # wind button (x,y) cords
           pg.rightClick()
           time.sleep(random_sleep)
           
@@ -231,7 +247,7 @@ def fight_over_reset():
 
 def recover_hp():
   global current_step
-  if pg.pixelMatchesColor(1305,808, (255,255,102)): # Checking if color is red or yeollw (low hp)
+  if pg.pixelMatchesColor(1305,812, (255,255,102)): # Checking if color is red or yeollw (low hp)
     #pg.moveTo(663,823) # moves moouse to sit position
     print("DBG: trying to sit")
     pg.moveTo(672,822) # moves moouse to sit position (laptop)
@@ -239,7 +255,7 @@ def recover_hp():
     pg.leftClick()
   #while pg.pixelMatchesColor(1303,825, (255,255,148)):
 
-  while pg.pixelMatchesColor(1305,808, (255,255,102)): #sitting untill this part is no longer yellow-ish (hp is filled)
+  while pg.pixelMatchesColor(1305,812, (255,255,102)): #sitting untill this part is no longer yellow-ish (hp is filled)
     print("DBG: hp not yet ok...")
     time.sleep(0.5)
   print("DBG: HP OKAY, current step --> 1 (checking for mobs)")
@@ -397,6 +413,7 @@ def check_esc_window():
   
 
 while keyboard.is_pressed('q') == False:
+  time.sleep(0.1)
   if current_step == 0:
     recover_hp()
     if current_zone == None:
